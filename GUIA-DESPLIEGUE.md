@@ -138,7 +138,11 @@ cd hermes-docker
 ```
 
 ### Paso 2: Crear Archivo de Configuración
+
+**⚠️ IMPORTANTE:** El archivo `.env` debe estar en la **raíz del proyecto** (misma carpeta que `docker-compose.yml`), NO en `config/`.
+
 ```bash
+# Copiar template a la ubicación CORRECTA (raíz del proyecto)
 sudo cp config/.env.example .env
 sudo nano .env
 ```
@@ -423,6 +427,63 @@ make whatsapp-reset
 
 **⚠️ IMPORTANTE:** WhatsApp Web solo permite UNA sesión activa. Si abres WhatsApp Web en tu PC, el bot se desconectará.
 
+### Error Común: "API key no reconocida"
+
+**Síntoma:** El bot no responde o logs muestran "Invalid API key"
+
+**Causa:** El archivo `.env` está en lugar equivocado (en `config/` en vez de raíz)
+
+**Verificación:**
+```bash
+# ❌ MAL - Esto es el template, NO funciona:
+ls config/.env  
+
+# ✅ BIEN - Debe estar en la raíz:
+ls /opt/hermes-docker/.env
+```
+
+**Solución:**
+```bash
+cd /opt/hermes-docker
+# Si tienes la API key en config/.env, muévelo:
+mv config/.env .env 2>/dev/null || echo "No existe config/.env"
+
+# O créalo nuevo en la ubicación correcta:
+cat > .env << 'EOF'
+OPENROUTER_API_KEY=sk-or-v1-TU-API-KEY
+HERMES_GATEWAY_ENABLED=true
+WHATSAPP_ENABLED=true
+EOF
+
+# Reiniciar
+docker compose restart
+```
+
+### Error Común: "Variable de entorno no definida"
+
+**Síntoma:** Errores como `ANTHROPIC_API_KEY not set` o `OPENROUTER_API_KEY not set`
+
+**Causas posibles:**
+1. Usando `ANTHROPIC_API_KEY` cuando tu API es de OpenRouter
+2. Archivo `.env` no leído por Docker
+
+**Solución:**
+```bash
+# Verificar qué API tienes:
+# • Anthropic: empieza con sk-ant-api03-
+# • OpenRouter: empieza con sk-or-v1-
+
+# Ver archivo actual:
+cat /opt/hermes-docker/.env
+
+# Si usas OpenRouter, asegúrate de tener:
+grep OPENROUTER_API_KEY .env || echo "⚠️ Falta OPENROUTER_API_KEY"
+
+# Recargar explícitamente:
+docker compose down
+docker compose --env-file .env up -d
+```
+
 ### Problema: "Build falla" o errores de dependencias
 **Solución:**
 ```bash
@@ -630,3 +691,37 @@ Si tienes problemas:
 ---
 
 **¡Listo! Tu Hermes Agent debería estar funcionando completamente. 🎉**
+
+---
+
+## ⚡ RESUMEN EXPRESS (Para expertos)
+
+Si ya sabes lo que haces y solo quieres los comandos:
+
+```bash
+# 1. Clonar
+git clone https://github.com/tesin73/Hermes.git /opt/hermes-docker
+cd /opt/hermes-docker
+
+# 2. Crear .env (SIEMPRE en la raíz, NO en config/)
+cat > .env << 'EOF'
+OPENROUTER_API_KEY=sk-or-v1-TU-API-KEY
+HERMES_GATEWAY_ENABLED=true
+WHATSAPP_ENABLED=true
+EOF
+
+# 3. Build y run
+sudo docker compose build
+sudo docker compose up -d
+
+# 4. Ver QR de WhatsApp
+sudo docker compose logs -f | grep -A 20 QR
+
+# 5. Escanear con tu teléfono → Listo ✅
+```
+
+**Troubleshooting rápido:**
+- Contenedor no levanta: `sudo docker compose logs`
+- API key no funciona: Revisar que esté en `./.env` (raíz), no `config/.env`
+- No responde: Verificar logs `docker compose logs | grep -i error`
+- WhatsApp se desconecta: Cerrar WhatsApp Web en tu navegador, resetear sesión con `make whatsapp-reset`
