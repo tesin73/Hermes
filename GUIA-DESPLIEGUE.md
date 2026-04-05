@@ -11,11 +11,13 @@
 3. [Opción A: Deploy Automático (Recomendado)](#-opción-a-deploy-automático-recomendado)
 4. [Opción B: Deploy Manual](#-opción-b-deploy-manual)
 5. [Configuración de WhatsApp](#-configuración-de-whatsapp)
+   - [Servidor QR para Escaneo Remoto](#-opción-especial-servidor-qr-para-escaneo-remoto)
 6. [Verificación y Testing](#-verificación-y-testing)
 7. [Comandos Útiles](#-comandos-útiles)
 8. [Solución de Problemas](#-solución-de-problemas)
 9. [Backup y Restauración](#-backup-y-restauración)
 10. [Actualización](#-actualización)
+11. [Resumen Express](#-resumen-express-para-expertos)
 
 ---
 
