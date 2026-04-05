@@ -1,0 +1,166 @@
+# =============================================================================
+# HERMES AGENT - DOCKER COMPOSE
+# Despliegue masivo en VPS con persistencia
+# =============================================================================
+
+version: "3.8"
+
+services:
+  # ==========================================================================
+  # SERVICIO PRINCIPAL: Hermes Agent Gateway
+  # ==========================================================================
+  hermes-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        HERMES_VERSION: main
+        INSTALL_WHATSAPP: "true"
+    image: hermes-agent:full
+    container_name: hermes-gateway
+    restart: unless-stopped
+    
+    # Persisencia de datos
+    volumes:
+      # Configuración y estado (MUY IMPORTANTE)
+      - hermes_config:/home/hermes/.hermes
+      # Directorio para archivos de trabajo
+      - hermes_workspace:/home/hermes/workspace
+      # Logs externos
+      - hermes_logs:/home/hermes/.hermes/logs
+      # Skills personalizadas (montar desde host si tienes skills propias)
+      - ./custom-skills:/home/hermes/.hermes/skills/custom:ro
+    
+    # Variables de entorno (se pueden sobreescribir en .env)
+    env_file:
+      - .env
+    
+    environment:
+      # Gateway settings
+      - HERMES_GATEWAY_ENABLED=true
+      - HERMES_GATEWAY_PLATFORMS=whatsapp,telegram,discord
+      # WhatsApp específico
+      - WHATSAPP_SESSION_NAME=hermes-session
+      - WHATSAPP_QR_TIMEOUT=60000
+      # Debug
+      - HERMES_LOG_LEVEL=${HERMES_LOG_LEVEL:-INFO}
+    
+    # Puertos (si necesitas API webhook)
+    ports:
+      - "${HERMES_API_PORT:-8080}:8080"
+      - "${HERMES_WEBHOOK_PORT:-3000}:3000"
+    
+    # Healthcheck
+    healthcheck:
+      test: ["CMD", "hermes", "doctor"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    
+    # Recursos
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # ==========================================================================
+  # SERVICIO OPCIONAL: Hermes CLI interactivo (para administración)
+  # ==========================================================================
+  hermes-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hermes-agent:full
+    container_name: hermes-cli
+    restart: "no"
+    
+    # Mismo volumen que gateway para compartir config
+    volumes:
+      - hermes_config:/home/hermes/.hermes
+      - hermes_workspace:/home/hermes/workspace
+    
+    env_file:
+      - .env
+    
+    # Override del comando para mantener shell
+    entrypoint: ["/bin/bash"]
+    stdin_open: true
+    tty: true
+    
+    # No se inicia automáticamente
+    profiles:
+      - cli
+
+  # ==========================================================================
+  # SERVICIO OPCIONAL: Cron jobs de Hermes
+  # ==========================================================================
+  hermes-cron:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hermes-agent:full
+    container_name: hermes-cron
+    restart: unless-stopped
+    
+    volumes:
+      - hermes_config:/home/hermes/.hermes
+      - hermes_workspace:/home/hermes/workspace
+      - ./cron-jobs:/home/hermes/cron-jobs:ro
+    
+    env_file:
+      - .env
+    
+    # Override para ejecutar solo cron
+    command: ["cron"]
+    
+    profiles:
+      - cron
+
+  # ==========================================================================
+  # SERVICIO RECOMENDADO: Base de datos para persistente (opcional)
+  # ==========================================================================
+  # Descomenta si quieres Honcho/Mem0 como backend de memoria
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: hermes-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: hermes
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD:-hermes123}
+  #     POSTGRES_DB: hermes_memory
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   profiles:
+  #     - database
+
+# ==========================================================================
+# VOLÚMENES PERSISTENTES
+# ==========================================================================
+volumes:
+  hermes_config:
+    driver: local
+  hermes_workspace:
+    driver: local
+  hermes_logs:
+    driver: local
+  # postgres_data:
+  #   driver: local
+
+# ==========================================================================
+# REDES
+# ==========================================================================
+networks:
+  default:
+    name: hermes-network

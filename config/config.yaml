@@ -1,0 +1,122 @@
+# =============================================================================
+# HERMES AGENT - CONFIGURACIÓN BASE PARA DOCKER
+# Esta config se adapta automáticamente al entorno containerizado
+# =============================================================================
+
+model:
+  default: ${HERMES_MODEL:-anthropic/claude-sonnet-4}
+  provider: ${HERMES_PROVIDER:-anthropic}
+  context_length: ${HERMES_CONTEXT_LENGTH:-200000}
+
+agent:
+  max_turns: ${HERMES_MAX_TURNS:-90}
+  tool_use_enforcement: ${HERMES_TOOL_ENFORCEMENT:-true}
+
+terminal:
+  backend: local
+  timeout: ${HERMES_TERMINAL_TIMEOUT:-300}
+  cwd: /home/hermes/workspace
+
+# Compresión automática de contexto
+compression:
+  enabled: true
+  threshold: 0.50
+  target_ratio: 0.20
+
+# Display/display
+skin: ${HERMES_SKIN:-default}
+model_in_title: true
+tool_progress: true
+show_reasoning: ${HERMES_SHOW_REASONING:-false}
+show_cost: ${HERMES_SHOW_COST:-false}
+
+# Voice settings
+stt:
+  enabled: ${HERMES_STT_ENABLED:-true}
+  provider: ${HERMES_STT_PROVIDER:-local}
+  local:
+    model: base
+
+tts:
+  provider: ${HERMES_TTS_PROVIDER:-edge}
+
+# Memory persistente
+memory:
+  memory_enabled: ${HERMES_MEMORY_ENABLED:-true}
+  user_profile_enabled: true
+  provider: ${HERMES_MEMORY_PROVIDER:-builtin}
+
+# Gateway (plataformas de mensajería)
+gateway:
+  enabled: ${HERMES_GATEWAY_ENABLED:-false}
+  host: "0.0.0.0"
+  port: ${HERMES_API_PORT:-8080}
+  
+  # Plataformas habilitadas
+  platforms:
+    # WHATSAPP
+    whatsapp:
+      enabled: ${WHATSAPP_ENABLED:-false}
+      session_name: ${WHATSAPP_SESSION_NAME:-hermes}
+      qr_timeout: ${WHATSAPP_QR_TIMEOUT:-60000}
+      # Borrar sesión y re-escanear: docker exec hermes-gateway hermes whatsapp-reset
+    
+    # TELEGRAM
+    telegram:
+      enabled: ${TELEGRAM_ENABLED:-false}
+      bot_token: ${TELEGRAM_BOT_TOKEN:-}
+      # Obtener token: @BotFather
+    
+    # DISCORD
+    discord:
+      enabled: ${DISCORD_ENABLED:-false}
+      bot_token: ${DISCORD_BOT_TOKEN:-}
+      # Obtener token: Discord Developer Portal
+    
+    # SLACK
+    slack:
+      enabled: ${SLACK_ENABLED:-false}
+      bot_token: ${SLACK_BOT_TOKEN:-}
+      signing_secret: ${SLACK_SIGNING_SECRET:-}
+    
+    # EMAIL
+    email:
+      enabled: ${EMAIL_ENABLED:-false}
+      imap_server: ${EMAIL_IMAP_SERVER:-}
+      imap_port: ${EMAIL_IMAP_PORT:-993}
+      smtp_server: ${EMAIL_SMTP_SERVER:-}
+      smtp_port: ${EMAIL_SMTP_PORT:-587}
+      username: ${EMAIL_USERNAME:-}
+      password: ${EMAIL_PASSWORD:-}
+
+# Toolsets habilitados por defecto
+toolsets:
+  - web
+  - browser
+  - terminal
+  - file
+  - code_execution
+  - vision
+  - skills
+  - memory
+  - session_search
+  - delegation
+  - cronjob
+
+# Delegación a subagentes
+delegation:
+  model: ${HERMES_DELEGATION_MODEL:-openrouter/google/gemini-flash-1.5}
+  provider: ${HERMES_DELEGATION_PROVIDER:-openrouter}
+  max_iterations: 50
+
+# Checkpoints de filesystem
+checkpoints:
+  enabled: ${HERMES_CHECKPOINTS_ENABLED:-true}
+  max_snapshots: 50
+
+# Logging
+logging:
+  level: ${HERMES_LOG_LEVEL:-INFO}
+  file: /home/hermes/.hermes/logs/hermes.log
+  max_size: 100MB
+  backup_count: 5
