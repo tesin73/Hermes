@@ -67,6 +67,8 @@ RUN pip install -e /opt/hermes-agent-source
 | `make whatsapp-qr` | Mostrar QR para escanear |
 | `make whatsapp-reset` | Borrar sesión de WhatsApp |
 | `make backup-create` | Backup de datos |
+| `make qr-start` | Servidor web para QR remoto |
+| `make qr-url` | Mostrar URL del QR |
 
 ## 📱 WhatsApp - Troubleshooting
 
@@ -100,6 +102,28 @@ make whatsapp-qr
 ```
 
 ## 🌍 Despliegue en VPS
+
+### 🌐 QR Remoto (para VPS en la nube)
+
+Cuando Hermes está en una VPS remota y no puedes ver el QR en terminal:
+
+```bash
+# 1. Iniciar servidor web para QR
+make qr-start
+
+# 2. Obtener la URL para descargar
+make qr-url
+# Muestra: http://203.0.113.45:8081/qr.png
+
+# 3. Desde tu PC local, descargar el QR
+curl -O http://203.0.113.45:8081/qr.png
+# Abre la imagen y escanea con WhatsApp
+
+# 4. Detener servidor cuando termines
+make qr-stop
+```
+
+Más detalles en [GUIA-DESPLIEGUE.md](GUIA-DESPLIEGUE.md)
 
 ### Requisitos mínimos
 - 1 vCPU
