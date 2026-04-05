@@ -164,16 +164,30 @@ qr-url:
 	@echo "  URL DEL SERVIDOR QR"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@IP=$$(hostname -I | awk '{print $$1}'); \
-	if [ -n "$$IP" ]; then \
-		echo "  🌐 http://$$IP:8081/qr.png"; \
-		echo "  🌐 http://$$IP:8081/status (JSON)"; \
+	@CONTAINER_STATUS=$$(docker-compose ps -q qr-server 2>/dev/null); \
+	if [ -z "$$CONTAINER_STATUS" ]; then \
+		echo "  ⚠️  El servidor QR NO está corriendo"; \
+		echo ""; \
+		echo "  Para iniciarlo, ejecuta: make qr-start"; \
+		echo ""; \
 	else \
-		echo "  🌐 http://localhost:8081/qr.png"; \
+		IP=$$(hostname -I | awk '{print $$1}'); \
+		if [ -n "$$IP" ]; then \
+			echo "  ✅ Servidor QR activo"; \
+			echo ""; \
+			echo "  🌐 Imagen QR:     http://$$IP:8081/qr.png"; \
+			echo "  📊 Status JSON:   http://$$IP:8081/status"; \
+			echo ""; \
+			echo "  💻 Para descargar el QR desde tu PC local:"; \
+			echo "     curl -O http://$$IP:8081/qr.png"; \
+			echo ""; \
+			echo "  📱 Escanear con WhatsApp:"; \
+			echo "     1. Abre WhatsApp → Menú → Dispositivos vinculados"; \
+			echo "     2. Escanea la imagen descargada (o abre URL en navegador)"; \
+		else \
+			echo "  🌐 http://localhost:8081/qr.png"; \
+		fi; \
 	fi
-	@echo ""
-	@echo "  💡 Si estás en VPS remota, usa:"
-	@echo "     curl -O http://IP:8081/qr.png"
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
