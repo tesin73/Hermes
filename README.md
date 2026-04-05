@@ -2,6 +2,8 @@
 
 Despliegue containerizado de Hermes Agent para masificar instalaciones en VPS.
 
+> 🏗️ **Arquitectura:** Esta imagen usa Hermes Agent original de [NousResearch](https://github.com/NousResearch/hermes-agent) como base, y agrega scripts personalizados (como el servidor QR remoto). Ver [ARQUITECTURA.md](ARQUITECTURA.md) para detalles técnicos.
+
 ## ⚡ Quick Start
 
 ```bash
