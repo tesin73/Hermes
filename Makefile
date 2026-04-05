@@ -28,9 +28,15 @@ help:
 	@echo "  make cli            - Iniciar CLI interactivo"
 	@echo ""
 	@echo "📱 WHATSAPP:"
-	@echo "  make whatsapp-qr    - Mostrar código QR"
+	@echo "  make whatsapp-qr    - Mostrar código QR (terminal)"
 	@echo "  make whatsapp-reset - Borrar sesión y re-autenticar"
 	@echo "  make whatsapp-logs  - Ver logs de WhatsApp"
+	@echo ""
+	@echo "🌐 SERVIDOR QR (para escanear remotamente):"
+	@echo "  make qr-start       - Iniciar servidor web con QR"
+	@echo "  make qr-stop        - Detener servidor QR"
+	@echo "  make qr-url         - Mostrar URLs de acceso"
+	@echo "  make qr-logs        - Ver logs del servidor"
 	@echo ""
 	@echo "🧹 MANTENIMIENTO:"
 	@echo "  make clean          - Eliminar contenedores y volúmenes"
@@ -128,6 +134,48 @@ whatsapp-logs:
 whatsapp-status:
 	@echo "📱 Estado de WhatsApp:"
 	docker-compose exec hermes-gateway sh /home/hermes/scripts/whatsapp-fix.sh status
+
+# ---------------------------------------------------------------------------
+# QR WEB SERVER - Para escanear remotamente
+# ---------------------------------------------------------------------------
+
+qr-start:
+	@echo "🌐 Iniciando servidor QR en http://localhost:8081..."
+	@echo "Accede desde tu navegador para ver el código QR como imagen"
+	@echo ""
+	docker-compose --profile qr-server up -d qr-server
+	@echo ""
+	@echo "📱 Servidor QR iniciado. Accede a:"
+	@echo "   http://$$(hostname -I | awk '{print $$1}'):8081/qr.png"
+	@echo ""
+	@echo "⚠️  IMPORTANTE: Abre el puerto 8081 en tu firewall si es necesario"
+
+qr-stop:
+	@echo "🛑 Deteniendo servidor QR..."
+	docker-compose --profile qr-server down qr-server
+
+qr-logs:
+	@echo "📜 Logs del servidor QR:"
+	docker-compose logs -f qr-server
+
+qr-url:
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "  URL DEL SERVIDOR QR"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@IP=$$(hostname -I | awk '{print $$1}'); \
+	if [ -n "$$IP" ]; then \
+		echo "  🌐 http://$$IP:8081/qr.png"; \
+		echo "  🌐 http://$$IP:8081/status (JSON)"; \
+	else \
+		echo "  🌐 http://localhost:8081/qr.png"; \
+	fi
+	@echo ""
+	@echo "  💡 Si estás en VPS remota, usa:"
+	@echo "     curl -O http://IP:8081/qr.png"
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # ---------------------------------------------------------------------------
 # MANTENIMIENTO

@@ -243,6 +243,50 @@ sudo docker compose exec hermes-gateway bash
 hermes gateway whatsapp-qr
 ```
 
+---
+
+### 🌐 OPCIÓN ESPECIAL: Servidor QR para Escaneo Remoto
+
+Si tu Hermes está en una **VPS remota** y quieres escanear el QR con tu teléfono local:
+
+**1. Iniciar servidor web de QR:**
+```bash
+make qr-start
+# O manualmente:
+docker-compose --profile qr-server up -d qr-server
+```
+
+**2. Obtener URL de acceso:**
+```bash
+make qr-url
+```
+
+Muestra algo como:
+```
+🌐 http://123.456.789.012:8081/qr.png
+🌐 http://123.456.789.012:8081/status (JSON)
+```
+
+**3. Descargar imagen QR:**
+```bash
+# Desde tu computadora local:
+curl -O http://IP_DE_TU_VPS:8081/qr.png
+# O abre en navegador y descarga
+```
+
+**4. Detener servidor QR (después de escanear):**
+```bash
+make qr-stop
+```
+
+**⚠️ Seguridad:**
+- El servidor QR NO se inicia automáticamente (es opcional)
+- Usa puerto 8081 por defecto (configurable en `.env`)
+- Cierra el puerto en firewall después de escanear
+- El QR cambia cada vez que reinicias, así que el servidor lo actualiza automáticamente
+
+---
+
 ### Escanear el QR
 
 1. Abre **WhatsApp en tu teléfono**

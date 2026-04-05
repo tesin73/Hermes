@@ -129,7 +129,48 @@ services:
       - cron
 
   # ==========================================================================
-  # SERVICIO RECOMENDADO: Base de datos para persistente (opcional)
+  # SERVICIO OPCIONAL: QR Web Server - Para escanear QR remotamente
+  # ==========================================================================
+  qr-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hermes-agent:full
+    container_name: hermes-qr-server
+    restart: unless-stopped
+    
+    # Reutilizar volumen compartido para acceder a logs de WhatsApp
+    volumes:
+      - hermes_config:/home/hermes/.hermes
+      - hermes_logs:/home/hermes/.hermes/logs:ro
+      - ./scripts/qr-server.py:/home/hermes/qr-server.py:ro
+    
+    ports:
+      - "${QR_SERVER_PORT:-8081}:8081"
+    
+    environment:
+      - HERMES_LOG_LEVEL=INFO
+    
+    # Instalar qrcode si no está
+    command: >
+      bash -c "pip install qrcode[pil] 2>/dev/null || pip install qrcode pillow && python3 /home/hermes/qr-server.py"
+    
+    # No depende del gateway, puede iniciar en paralelo
+    depends_on:
+      - hermes-gateway
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/status"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    
+    profiles:
+      - qr-server
+
+  # ==========================================================================
+  # SERVICIO OPCIONAL: Base de datos para persistente (opcional)
   # ==========================================================================
   # Descomenta si quieres Honcho/Mem0 como backend de memoria
   # postgres:
